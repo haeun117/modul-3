@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PIUM 부분창작 모듈 MVP</title>
-    <link rel="stylesheet" href="./style.css?v=20260213g" />
+    <link rel="stylesheet" href="./style.css?v=20260213o" />
   </head>
   <body>
     <main class="app">
@@ -16,42 +16,63 @@
       </header>
 
       <section class="status-bar">
-        <div><span class="label">곡</span><strong id="song-title">-</strong></div>
-        <div><span class="label">조성</span><strong id="song-key">-</strong></div>
-        <div><span class="label">박자</span><strong id="song-time">-</strong></div>
+        <div>
+          <span class="label">제목</span>
+          <div class="select-wrap song-select-wrap">
+            <select id="song-select"></select>
+          </div>
+        </div>
         <div class="mission-card">
-          <span class="label">편집할 마디</span>
-          <strong id="mission-range">-</strong>
-          <button id="reload-mission-btn" class="ghost-btn mission-reroll-btn" type="button">랜덤 선택</button>
+          <span class="label">마디 선택</span>
+          <strong id="mission-range" class="sr-only">-</strong>
+          <div class="row mission-input-row wrap">
+            <input id="manual-measures-input" type="text" placeholder="예: 3,8,12" />
+            <button id="apply-measures-btn" class="action-btn" type="button">적용</button>
+            <button id="reload-mission-btn" class="ghost-btn mission-reroll-btn" type="button">자동 선택</button>
+          </div>
         </div>
       </section>
 
       <section class="workspace">
         <article class="score-pane">
           <div class="score-header">
-            <h2>악보</h2>
-            <p id="tutorial-text">음표를 클릭하고 오른쪽 팔레트로 바꿔보세요.</p>
+            <p id="tutorial-text">음표/마디를 선택하고 내맘대로 음악을 꾸며보세요.</p>
           </div>
           <div id="score-container" class="score-container" aria-label="악보 영역"></div>
         </article>
 
         <aside class="palette-pane">
-          <h2>놀이 도구</h2>
+          <h2>음악 꾸미기 🎨</h2>
 
           <section class="tool-group">
-            <h3>음정 바꾸기</h3>
-            <div class="row icon-row">
-              <button id="pitch-up-btn" class="icon-circle-btn" type="button" aria-label="올리기" title="올리기">↑</button>
-              <button id="pitch-down-btn" class="icon-circle-btn" type="button" aria-label="내리기" title="내리기">↓</button>
+            <h3>음정/리듬 바꾸기</h3>
+            <div class="edit-dual">
+              <div class="mini-tool">
+                <p class="mini-title">음정</p>
+                <div class="row icon-row">
+                  <button id="pitch-up-btn" class="icon-circle-btn" type="button" aria-label="올리기" title="올리기">↑</button>
+                  <button id="pitch-down-btn" class="icon-circle-btn" type="button" aria-label="내리기" title="내리기">↓</button>
+                </div>
+              </div>
+              <div class="mini-tool">
+                <p class="mini-title">리듬</p>
+                <div class="row icon-row">
+                  <button id="random-rhythm-btn" class="icon-circle-btn" type="button" aria-label="랜덤 리듬" title="랜덤 리듬">↻</button>
+                </div>
+              </div>
             </div>
+            <div id="duration-buttons" class="duration-buttons-hidden"></div>
           </section>
 
           <section class="tool-group">
-            <h3>리듬 바꾸기</h3>
-            <div class="row icon-row">
-              <button id="random-rhythm-btn" class="icon-circle-btn" type="button" aria-label="랜덤 리듬" title="랜덤 리듬">↻</button>
+            <h3>빠르기 설정</h3>
+            <div class="tempo-wrap">
+              <input id="tempo-slider" type="range" min="0" max="200" value="90" step="1" />
+              <span id="tempo-value">90 BPM</span>
             </div>
-            <div id="duration-buttons" class="duration-buttons-hidden"></div>
+            <div class="row">
+              <button id="metronome-toggle-btn" class="action-btn" type="button"><span class="metronome-icon">⏱</span> 박자 도우미 OFF</button>
+            </div>
           </section>
 
           <section class="tool-group">
@@ -64,7 +85,7 @@
           </section>
 
           <section class="tool-group">
-            <h3>들어보기</h3>
+            <h3>악기 선택하기</h3>
             <div class="row instrument-row">
               <div class="select-wrap">
                 <select id="instrument-select"></select>
@@ -86,6 +107,6 @@
     <script src="./libs/opensheetmusicdisplay.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
-    <script defer src="./script.js?v=20260213n"></script>
+    <script defer src="./script.js?v=20260213s"></script>
   </body>
 </html>

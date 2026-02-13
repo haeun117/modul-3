@@ -38,13 +38,11 @@ body {
   justify-content: space-between;
   gap: 10px;
   align-items: flex-start;
-  background:
-    radial-gradient(circle at 6% 12%, rgba(255, 246, 201, 0.95), transparent 32%),
-    linear-gradient(180deg, #fffdf4 0%, #fff6e4 100%);
-  border: 1px solid #efd8a8;
+  background: #ffffff;
+  border: 1px solid #dbe6f8;
   border-radius: 26px;
   padding: 18px 18px 16px;
-  box-shadow: 0 5px 12px rgba(120, 92, 32, 0.08);
+  box-shadow: 0 5px 12px rgba(29, 71, 148, 0.06);
 }
 
 .kicker {
@@ -67,7 +65,7 @@ h1 {
 
 .status-bar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -81,15 +79,25 @@ h1 {
 }
 
 .mission-card {
-  position: relative;
   gap: 6px !important;
-  padding-right: 118px !important;
+}
+
+.mission-input-row {
+  margin-top: 2px;
+}
+
+.mission-input-row input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #6ea2ff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  color: #144792;
+  background: #f7fbff;
 }
 
 .mission-reroll-btn {
-  position: absolute;
-  right: 10px;
-  top: 10px;
   padding: 7px 12px;
   font-size: 0.84rem;
 }
@@ -185,6 +193,47 @@ h1 {
   transform: translate(-10px, 6px) rotate(-12deg);
 }
 
+.edit-dual {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mini-tool {
+  border: 1px solid #efd8a8;
+  border-radius: 16px;
+  padding: 10px;
+  background: #fffdfa;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.mini-title {
+  margin: 0;
+  color: #7c6631;
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.tempo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#tempo-slider {
+  flex: 1;
+  accent-color: #4f8cff;
+}
+
+#tempo-value {
+  min-width: 70px;
+  color: #5d4f27;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
 .tool-group.small p {
   margin: 0;
   color: var(--muted);
@@ -264,9 +313,36 @@ button:disabled {
   padding: 9px 14px;
 }
 
+.metronome-icon {
+  font-size: 1.25em;
+  line-height: 1;
+  margin-right: 2px;
+  vertical-align: -0.05em;
+}
+
 .select-wrap {
   position: relative;
   display: inline-block;
+}
+
+.song-select-wrap {
+  display: inline-block;
+  width: fit-content;
+  justify-self: start;
+}
+
+.song-select-wrap select {
+  min-width: 108px;
+  width: 108px;
+  padding-right: 34px;
+}
+
+.song-select-wrap::after {
+  content: "▾";
+  right: 12px;
+  color: #2f5fb8;
+  font-size: 0.95rem;
+  font-weight: 900;
 }
 
 .select-wrap::after {
@@ -430,5 +506,9 @@ select {
 
   .status-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .edit-dual {
+    grid-template-columns: 1fr;
   }
 }

@@ -19,9 +19,12 @@ const appState = {
   playbackDirty: true,
   playbackContext: { type: "score", measureNumber: null },
   playbackPausedAtSec: 0,
+  metronomeEnabled: false,
+  metronomeSynth: null,
   allowedMidiMin: 12,
   allowedMidiMax: 108,
   tempo: 90,
+  tempoUserSet: false,
   lastMissionKey: "",
   highlightRedrawTimers: [],
   highlightObserver: null,
@@ -32,15 +35,21 @@ const appState = {
   measureRegions: [],
   samplers: new Map(),
   currentInstrumentId: "acoustic_piano",
+  currentSongId: "gabaram",
+  metronomeRepeatId: null,
+  metronomeBeatCounter: 0,
+  lastRandomRhythmByMeasure: new Map(),
 };
 
 const dom = {
   scoreContainer: document.getElementById("score-container"),
-  songTitle: document.getElementById("song-title"),
+  songSelect: document.getElementById("song-select"),
   songKey: document.getElementById("song-key"),
   songTime: document.getElementById("song-time"),
   missionRange: document.getElementById("mission-range"),
   selectedNoteView: document.getElementById("selected-note-view"),
+  manualMeasuresInput: document.getElementById("manual-measures-input"),
+  applyMeasuresButton: document.getElementById("apply-measures-btn"),
   durationButtons: document.getElementById("duration-buttons"),
   toast: document.getElementById("toast"),
   pitchUpButton: document.getElementById("pitch-up-btn"),
@@ -57,6 +66,9 @@ const dom = {
   reloadMissionButton: document.getElementById("reload-mission-btn"),
   randomRhythmButton: document.getElementById("random-rhythm-btn"),
   instrumentSelect: document.getElementById("instrument-select"),
+  tempoSlider: document.getElementById("tempo-slider"),
+  tempoValue: document.getElementById("tempo-value"),
+  metronomeToggleButton: document.getElementById("metronome-toggle-btn"),
 };
 
 const DURATION_BEATS = {
@@ -139,6 +151,16 @@ const SAMPLE_INSTRUMENTS = [
   { id: "trumpet", name: "트럼펫", baseUrl: "./assets/INST_SAMPLE/brass_bigband/trumpet/long/", notes: [52, 60, 72, 84], suffix: "_127_1.flac" },
   { id: "marimba", name: "마림바", baseUrl: "./assets/INST_SAMPLE/marimba/none/", notes: [44, 50, 56, 59, 62, 65, 68, 71, 74, 77, 80, 83, 86, 89, 92, 96], suffix: "_127_3.flac" },
   { id: "synth", name: "신스", baseUrl: "./assets/INST_SAMPLE/synth/lead/01/", notes: [36, 48, 60, 72, 84, 96, 108, 120], suffix: "_127_1.flac" },
+];
+
+const SONG_OPTIONS = [
+  {
+    id: "gabaram",
+    name: "가을바람",
+    rulesPath: "./assets/score.rules.json",
+    musicxmlPath: "./assets/score.musicxml",
+    mxlPath: "./assets/score.mxl",
+  },
 ];
 
 const SHARP_ORDER = ["F", "C", "G", "D", "A", "E", "B"];
@@ -277,10 +299,15 @@ function getExpectedMeasureDuration(measureModel) {
 }
 
 function updateScoreStatusHeader() {
-  dom.songTitle.textContent = appState.rules.title;
-  dom.songKey.textContent = `${appState.rules.key} ${appState.rules.mode}`;
-  dom.songTime.textContent = appState.rules.timeSignature;
-  dom.missionRange.textContent = `${appState.mission.list.join(", ")}`;
+  if (dom.songSelect) {
+    dom.songSelect.value = appState.currentSongId;
+  }
+  if (dom.songKey) dom.songKey.textContent = `${appState.rules.key} ${appState.rules.mode}`;
+  if (dom.songTime) dom.songTime.textContent = appState.rules.timeSignature;
+  if (dom.missionRange) dom.missionRange.textContent = `${appState.mission.list.join(", ")}`;
+  if (dom.manualMeasuresInput) {
+    dom.manualMeasuresInput.value = appState.mission.list.join(", ");
+  }
 }
 
 function pickThreeSeparatedMeasures() {
@@ -334,6 +361,29 @@ function pickThreeSeparatedMeasures() {
     list: picked,
     measures: new Set(picked),
   };
+}
+
+function applyManualMeasures(rawText) {
+  const source = new Set(appState.measureModels.map((m) => m.number));
+  const values = String(rawText || "")
+    .split(",")
+    .map((s) => Number.parseInt(s.trim(), 10))
+    .filter((n) => Number.isFinite(n));
+  const unique = [...new Set(values)];
+
+  if (unique.length === 0) {
+    throw new Error("마디 번호를 입력해 주세요.");
+  }
+  if (unique.length > 3) {
+    throw new Error("마디는 최대 3개까지 입력할 수 있어요.");
+  }
+  if (unique.some((n) => !source.has(n))) {
+    throw new Error("악보에 없는 마디 번호가 있어요.");
+  }
+
+  const picked = unique.sort((a, b) => a - b);
+  appState.lastMissionKey = picked.join(",");
+  appState.mission = { list: picked, measures: new Set(picked) };
 }
 
 function isMeasureInMission(measureNumber) {
@@ -461,7 +511,9 @@ function parseMusicXMLToModel(xmlText) {
   let currentKeyFifths = 0;
 
   const tempoEl = xmlDoc.querySelector("sound[tempo]") || xmlDoc.querySelector("metronome > per-minute");
-  appState.tempo = tempoEl ? Number(tempoEl.getAttribute("tempo") || tempoEl.textContent || "90") : 90;
+  if (!appState.tempoUserSet) {
+    appState.tempo = tempoEl ? Number(tempoEl.getAttribute("tempo") || tempoEl.textContent || "90") : 90;
+  }
 
   const measures = Array.from(part.querySelectorAll("measure"));
   measures.forEach((measureNode, measureIndex) => {
@@ -554,17 +606,23 @@ async function parseMxlToXml(arrayBuffer) {
   return new TextDecoder().decode(unzip[scorePath]);
 }
 
+function getCurrentSongOption() {
+  return SONG_OPTIONS.find((song) => song.id === appState.currentSongId) || SONG_OPTIONS[0];
+}
+
 async function loadRules() {
-  const res = await fetch("./assets/score.rules.json");
+  const song = getCurrentSongOption();
+  const res = await fetch(song.rulesPath);
   if (!res.ok) throw new Error("rules.json 로드 실패");
   return res.json();
 }
 
 async function loadScoreXml() {
-  const musicXmlRes = await fetch("./assets/score.musicxml");
+  const song = getCurrentSongOption();
+  const musicXmlRes = await fetch(song.musicxmlPath);
   if (musicXmlRes.ok) return musicXmlRes.text();
 
-  const mxlRes = await fetch("./assets/score.mxl");
+  const mxlRes = await fetch(song.mxlPath);
   if (!mxlRes.ok) throw new Error("score.musicxml / score.mxl 모두 로드 실패");
   return parseMxlToXml(await mxlRes.arrayBuffer());
 }
@@ -828,6 +886,16 @@ function updatePlaybackButtons() {
   }
 }
 
+function updateTempoControls() {
+  if (dom.tempoSlider) dom.tempoSlider.value = String(Math.max(0, Math.min(200, Math.round(appState.tempo || 90))));
+  if (dom.tempoValue) dom.tempoValue.textContent = `${Math.round(appState.tempo || 90)} BPM`;
+  if (dom.metronomeToggleButton) {
+    dom.metronomeToggleButton.innerHTML = `<span class="metronome-icon">⏱</span> 박자 도우미 ${
+      appState.metronomeEnabled ? "ON" : "OFF"
+    }`;
+  }
+}
+
 function updateButtonsState() {
   dom.pitchUpButton.disabled = !isSelectedNoteEditableForPitch();
   dom.pitchDownButton.disabled = !isSelectedNoteEditableForPitch();
@@ -1045,8 +1113,9 @@ async function rebuildFromCurrentXml() {
   buildAllowedScaleMidis(appState.noteModels);
   normalizeAccidentalsInCurrentXml();
   appState.playbackDirty = true;
+  const normalizedXml = new XMLSerializer().serializeToString(appState.xmlDoc);
 
-  await renderScore(currentXml);
+  await renderScore(normalizedXml);
   mapRenderedElementsToNotes();
   refreshRenderedNoteClasses();
   updateSelectedNoteView();
@@ -1329,7 +1398,18 @@ async function applyRandomRhythmToActiveMeasure() {
     const availableTypes = getAvailableDurationTypesForDivisions(measure.divisions);
     const durationUnits = availableTypes.map(toUnitsByDuration).filter((u) => u != null);
     if (durationUnits.length === 0) return showToast("이 마디에서 사용 가능한 리듬 길이가 없어요");
-    const randomUnits = buildRandomRhythmUnits(noteList.length, targetUnits, durationUnits);
+    const currentUnits = noteList.map((note) => toUnitsByDuration(note.durationType) ?? 0).join("-");
+    const lastUnits = appState.lastRandomRhythmByMeasure.get(measureNumber) || "";
+    let randomUnits = null;
+    let randomUnitsKey = "";
+    for (let attempt = 0; attempt < 24; attempt += 1) {
+      const candidate = buildRandomRhythmUnits(noteList.length, targetUnits, durationUnits);
+      if (!candidate) continue;
+      const key = candidate.join("-");
+      randomUnits = candidate;
+      randomUnitsKey = key;
+      if (key !== currentUnits && key !== lastUnits) break;
+    }
     if (!randomUnits) return showToast("랜덤 리듬 조합을 찾지 못했어요");
 
     const unitToDuration = { 1: "16th", 2: "eighth", 4: "quarter", 8: "half", 16: "whole" };
@@ -1364,6 +1444,7 @@ async function applyRandomRhythmToActiveMeasure() {
     });
 
     await rebuildFromCurrentXml();
+    appState.lastRandomRhythmByMeasure.set(measureNumber, randomUnitsKey);
     showToast(`${measureNumber}마디 랜덤 리듬 적용`);
   } catch (error) {
     console.error("[applyRandomRhythmToActiveMeasure]", error);
@@ -1380,6 +1461,41 @@ function clearPlaybackSchedule() {
     appState.playbackStopEventId = null;
   }
   appState.playbackTotalSec = 0;
+}
+
+function stopMetronomeLoop() {
+  if (!window.Tone) return;
+  if (appState.metronomeRepeatId !== null) {
+    Tone.Transport.clear(appState.metronomeRepeatId);
+    appState.metronomeRepeatId = null;
+  }
+}
+
+function ensureMetronomeSynth() {
+  if (!window.Tone) return;
+  if (appState.metronomeSynth) return;
+  appState.metronomeSynth = new Tone.MembraneSynth({
+    pitchDecay: 0.01,
+    octaves: 2,
+    envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 },
+  }).toDestination();
+}
+
+function startMetronomeLoop() {
+  if (!window.Tone || !appState.metronomeEnabled) return;
+  ensureMetronomeSynth();
+  stopMetronomeLoop();
+  const beatSec = 60 / (appState.tempo || 90);
+  const nowSec = Tone.Transport.seconds || 0;
+  const nextBeatIndex = Math.ceil(nowSec / beatSec);
+  const nextBeatTime = nextBeatIndex * beatSec;
+  appState.metronomeBeatCounter = nextBeatIndex % 4;
+  appState.metronomeRepeatId = Tone.Transport.scheduleRepeat((time) => {
+    const accent = appState.metronomeBeatCounter % 4 === 0;
+    const note = accent ? "C5" : "A4";
+    appState.metronomeSynth.triggerAttackRelease(note, "32n", time, accent ? 0.7 : 0.42);
+    appState.metronomeBeatCounter += 1;
+  }, "4n", nextBeatTime);
 }
 
 function normalizeAccidentalsInCurrentXml() {
@@ -1413,6 +1529,7 @@ function finishPlayback() {
     Tone.Transport.stop();
     Tone.Transport.position = 0;
   }
+  stopMetronomeLoop();
   clearPlaybackSchedule();
   setPlaybackActiveNote(null);
   appState.playbackPausedAtSec = 0;
@@ -1536,6 +1653,7 @@ async function playScore() {
         await schedulePlaybackForNotes(notes, appState.playbackPausedAtSec || 0);
       }
       Tone.Transport.start("+0.01");
+      startMetronomeLoop();
       appState.playbackState = "playing";
       updatePlaybackButtons();
       return;
@@ -1544,6 +1662,7 @@ async function playScore() {
 
     await scheduleScorePlayback();
     Tone.Transport.start("+0.01");
+    startMetronomeLoop();
     appState.playbackState = "playing";
     updatePlaybackButtons();
   } catch (error) {
@@ -1557,6 +1676,7 @@ function pauseScore() {
   if (!window.Tone) return;
   if (appState.playbackState !== "playing") return;
   appState.playbackPausedAtSec = Tone.Transport.seconds || 0;
+  stopMetronomeLoop();
   Tone.Transport.pause();
   appState.playbackState = "paused";
   updatePlaybackButtons();
@@ -1583,6 +1703,7 @@ async function playSelectedMeasure() {
     }
     await scheduleSelectedMeasurePlayback();
     Tone.Transport.start("+0.01");
+    startMetronomeLoop();
     appState.playbackState = "playing";
     updatePlaybackButtons();
   } catch (error) {
@@ -1682,6 +1803,23 @@ function initInstrumentSelect() {
   });
 }
 
+function initSongSelect() {
+  if (!dom.songSelect) return;
+  dom.songSelect.innerHTML = "";
+
+  SONG_OPTIONS.forEach((song) => {
+    const option = document.createElement("option");
+    option.value = song.id;
+    option.textContent = song.name;
+    dom.songSelect.appendChild(option);
+  });
+
+  if (!SONG_OPTIONS.some((song) => song.id === appState.currentSongId)) {
+    appState.currentSongId = SONG_OPTIONS[0]?.id || "gabaram";
+  }
+  dom.songSelect.value = appState.currentSongId;
+}
+
 function resetMissionAndRerender(message) {
   stopScore();
   appState.xmlDoc = new DOMParser().parseFromString(appState.xmlTextOriginal, "application/xml");
@@ -1701,6 +1839,34 @@ function resetMissionAndRerender(message) {
   appState.activeMeasureNumber = null;
   updateScoreStatusHeader();
   rebuildFromCurrentXml().then(() => showToast(`${message}: ${appState.mission.list.join(", ")}`));
+}
+
+async function loadCurrentSong() {
+  const xmlText = await loadScoreXml();
+  appState.xmlTextOriginal = xmlText;
+  appState.rules = await loadRules();
+
+  const parsed = parseMusicXMLToModel(xmlText);
+  appState.xmlDoc = parsed.xmlDoc;
+  appState.noteModels = parsed.noteModels;
+  appState.measureModels = parsed.measureModels;
+  buildAllowedScaleMidis(appState.noteModels);
+  normalizeAccidentalsInCurrentXml();
+  appState.undoStack = [];
+  appState.redoStack = [];
+  appState.editLogs = [];
+  appState.selectedNoteId = null;
+  appState.activeMeasureNumber = null;
+
+  pickThreeSeparatedMeasures();
+  updateScoreStatusHeader();
+  updateTempoControls();
+
+  await renderScore(new XMLSerializer().serializeToString(appState.xmlDoc));
+  mapRenderedElementsToNotes();
+  refreshRenderedNoteClasses();
+  updateSelectedNoteView();
+  updateButtonsState();
 }
 
 function wireEvents() {
@@ -1777,38 +1943,94 @@ function wireEvents() {
     });
   }
 
-  dom.reloadMissionButton.addEventListener("click", () => {
-    resetMissionAndRerender("새 3마디 미션을 선택했어요");
-  });
+  if (dom.reloadMissionButton) {
+    dom.reloadMissionButton.addEventListener("click", () => {
+      resetMissionAndRerender("새 3마디 미션을 선택했어요");
+    });
+  }
+
+  if (dom.applyMeasuresButton) {
+    dom.applyMeasuresButton.addEventListener("click", () => {
+      try {
+        stopScore();
+        applyManualMeasures(dom.manualMeasuresInput?.value || "");
+        appState.activeMeasureNumber = null;
+        appState.selectedNoteId = null;
+        updateScoreStatusHeader();
+        refreshRenderedNoteClasses();
+        updateSelectedNoteView();
+        updateButtonsState();
+        showToast(`편집 마디 적용: ${appState.mission.list.join(", ")}`);
+      } catch (error) {
+        showToast(error.message || "마디 입력이 올바르지 않아요");
+      }
+    });
+  }
+
+  if (dom.manualMeasuresInput) {
+    dom.manualMeasuresInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      dom.applyMeasuresButton?.click();
+    });
+  }
+
+  if (dom.tempoSlider) {
+    dom.tempoSlider.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const bpm = Math.max(0, Math.min(200, Number.parseInt(target.value || "90", 10) || 0));
+      appState.tempo = bpm;
+      appState.tempoUserSet = true;
+      appState.playbackDirty = true;
+      if (window.Tone) {
+        Tone.Transport.bpm.value = bpm;
+      }
+      if (appState.playbackState === "playing" && appState.metronomeEnabled) {
+        startMetronomeLoop();
+      }
+      updateTempoControls();
+    });
+  }
+
+  if (dom.metronomeToggleButton) {
+    dom.metronomeToggleButton.addEventListener("click", () => {
+      appState.metronomeEnabled = !appState.metronomeEnabled;
+      if (appState.playbackState === "playing") {
+        if (appState.metronomeEnabled) startMetronomeLoop();
+        else stopMetronomeLoop();
+      } else if (!appState.metronomeEnabled) {
+        stopMetronomeLoop();
+      }
+      updateTempoControls();
+    });
+  }
+
+  if (dom.songSelect) {
+    dom.songSelect.addEventListener("change", async (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLSelectElement)) return;
+      appState.currentSongId = target.value;
+      stopScore();
+      try {
+        await loadCurrentSong();
+        showToast(`${target.selectedOptions[0]?.textContent || "곡"} 로드 완료`);
+      } catch (error) {
+        console.error("[songSelectChange]", error);
+        showToast(`곡 로드 실패: ${error.message || "알 수 없는 오류"}`);
+      }
+    });
+  }
 }
 
 async function init() {
   try {
-    appState.rules = await loadRules();
-
-    const xmlText = await loadScoreXml();
-    appState.xmlTextOriginal = xmlText;
-
-    const parsed = parseMusicXMLToModel(xmlText);
-    appState.xmlDoc = parsed.xmlDoc;
-    appState.noteModels = parsed.noteModels;
-    appState.measureModels = parsed.measureModels;
-    buildAllowedScaleMidis(appState.noteModels);
-    normalizeAccidentalsInCurrentXml();
-
-    pickThreeSeparatedMeasures();
-    appState.activeMeasureNumber = null;
-    updateScoreStatusHeader();
+    initSongSelect();
     initInstrumentSelect();
     buildDurationButtons();
     wireEvents();
     installHighlightPersistence();
-
-    await renderScore(new XMLSerializer().serializeToString(appState.xmlDoc));
-    mapRenderedElementsToNotes();
-    refreshRenderedNoteClasses();
-    updateSelectedNoteView();
-    updateButtonsState();
+    await loadCurrentSong();
 
     showToast(`랜덤 3마디: ${appState.mission.list.join(", ")} (표시된 마디만 편집 가능)`);
   } catch (error) {
