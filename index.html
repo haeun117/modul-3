@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PIUM 부분창작 모듈 MVP</title>
+    <link rel="stylesheet" href="./style.css?v=20260213g" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="kicker">PIUM</p>
+          <h1>나만의 음악 만들기</h1>
+        </div>
+      </header>
+
+      <section class="status-bar">
+        <div><span class="label">곡</span><strong id="song-title">-</strong></div>
+        <div><span class="label">조성</span><strong id="song-key">-</strong></div>
+        <div><span class="label">박자</span><strong id="song-time">-</strong></div>
+        <div class="mission-card">
+          <span class="label">편집할 마디</span>
+          <strong id="mission-range">-</strong>
+          <button id="reload-mission-btn" class="ghost-btn mission-reroll-btn" type="button">랜덤 선택</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <article class="score-pane">
+          <div class="score-header">
+            <h2>악보</h2>
+            <p id="tutorial-text">음표를 클릭하고 오른쪽 팔레트로 바꿔보세요.</p>
+          </div>
+          <div id="score-container" class="score-container" aria-label="악보 영역"></div>
+        </article>
+
+        <aside class="palette-pane">
+          <h2>놀이 도구</h2>
+
+          <section class="tool-group">
+            <h3>음정 바꾸기</h3>
+            <div class="row icon-row">
+              <button id="pitch-up-btn" class="icon-circle-btn" type="button" aria-label="올리기" title="올리기">↑</button>
+              <button id="pitch-down-btn" class="icon-circle-btn" type="button" aria-label="내리기" title="내리기">↓</button>
+            </div>
+          </section>
+
+          <section class="tool-group">
+            <h3>리듬 바꾸기</h3>
+            <div class="row icon-row">
+              <button id="random-rhythm-btn" class="icon-circle-btn" type="button" aria-label="랜덤 리듬" title="랜덤 리듬">↻</button>
+            </div>
+            <div id="duration-buttons" class="duration-buttons-hidden"></div>
+          </section>
+
+          <section class="tool-group">
+            <h3>되돌리기</h3>
+            <div class="row">
+              <button id="undo-btn" class="action-btn" type="button">뒤로가기</button>
+              <button id="redo-btn" class="action-btn" type="button">앞으로 가기</button>
+              <button id="reset-btn" class="action-btn" type="button">처음으로</button>
+            </div>
+          </section>
+
+          <section class="tool-group">
+            <h3>들어보기</h3>
+            <div class="row instrument-row">
+              <div class="select-wrap">
+                <select id="instrument-select"></select>
+              </div>
+            </div>
+            <div class="row wrap">
+              <button id="play-btn" class="icon-circle-btn" type="button" aria-label="재생" title="재생">▶</button>
+              <button id="pause-btn" class="icon-circle-btn" type="button" aria-label="일시정지" title="일시정지">❚❚</button>
+              <button id="stop-btn" class="icon-circle-btn" type="button" aria-label="정지" title="정지">■</button>
+              <button id="play-measure-btn" class="action-btn" type="button">선택한 마디 재생</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="./libs/opensheetmusicdisplay.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+    <script defer src="./script.js?v=20260213n"></script>
+  </body>
+</html>
