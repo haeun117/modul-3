@@ -45,12 +45,45 @@ const appState = {
   homeDecorResizeTimer: null,
   songDrafts: new Map(),
   loadedXmlBaseline: "",
+  teacherOsmd: null,
+  teacherSelectedSubmissionId: null,
+  teacherSelectedSubmission: null,
+  teacherPlaybackState: "stopped",
+  teacherPlaybackEventIds: [],
+  teacherPlaybackStopEventId: null,
+  teacherCurrentInstrumentId: "acoustic_piano",
+  teacherTempo: 90,
+  teacherFullscreenOsmd: null,
+  teacherListCollapsed: false,
 };
 
 const dom = {
   homeScreen: document.getElementById("home-screen"),
+  teacherScreen: document.getElementById("teacher-screen"),
+  teacherWorkspace: document.querySelector(".teacher-workspace"),
   homeMap: document.querySelector(".home-map"),
   homeDecorLayer: document.getElementById("home-decor-layer"),
+  goTeacherButton: document.getElementById("go-teacher-btn"),
+  teacherBackButton: document.getElementById("teacher-back-btn"),
+  teacherSubmissionList: document.getElementById("teacher-submission-list"),
+  teacherListToggleButton: document.getElementById("teacher-list-toggle-btn"),
+  teacherSubmissionMeta: document.getElementById("teacher-submission-meta"),
+  teacherScoreContainer: document.getElementById("teacher-score-container"),
+  teacherFullscreenButton: document.getElementById("teacher-fullscreen-btn"),
+  teacherFullscreenOverlay: document.getElementById("teacher-fullscreen-overlay"),
+  teacherFullscreenCloseButton: document.getElementById("teacher-fullscreen-close-btn"),
+  teacherFullscreenScoreContainer: document.getElementById("teacher-fullscreen-score-container"),
+  teacherScoreIconWrap: document.getElementById("teacher-score-icon-wrap"),
+  teacherScoreIcon: document.getElementById("teacher-score-icon"),
+  teacherInstrumentSelect: document.getElementById("teacher-instrument-select"),
+  teacherTempoSlider: document.getElementById("teacher-tempo-slider"),
+  teacherTempoValue: document.getElementById("teacher-tempo-value"),
+  teacherPlayButton: document.getElementById("teacher-play-btn"),
+  teacherStopButton: document.getElementById("teacher-stop-btn"),
+  submitOverlay: document.getElementById("submit-overlay"),
+  submitNameInput: document.getElementById("submit-name-input"),
+  submitConfirmButton: document.getElementById("submit-confirm-btn"),
+  submitCancelButton: document.getElementById("submit-cancel-btn"),
   editorScreen: document.getElementById("editor-screen"),
   goHomeButton: document.getElementById("go-home-btn"),
   saveOverlay: document.getElementById("save-overlay"),
@@ -63,6 +96,7 @@ const dom = {
   songKey: document.getElementById("song-key"),
   songTime: document.getElementById("song-time"),
   missionRange: document.getElementById("mission-range"),
+  currentGradeLabel: document.getElementById("current-grade-label"),
   scoreBottomIconWrap: document.getElementById("score-bottom-icon-wrap"),
   scoreBottomIcon: document.getElementById("score-bottom-icon"),
   selectedNoteView: document.getElementById("selected-note-view"),
@@ -81,6 +115,7 @@ const dom = {
   playButton: document.getElementById("play-btn"),
   pauseButton: document.getElementById("pause-btn"),
   stopButton: document.getElementById("stop-btn"),
+  saveButton: document.getElementById("save-btn"),
   exportXmlButton: document.getElementById("export-xml-btn"),
   exportLogsButton: document.getElementById("export-logs-btn"),
   randomRhythmButton: document.getElementById("random-rhythm-btn"),
@@ -217,6 +252,24 @@ const SONG_OPTIONS = [
     mxlPath: "./assets/songs/3_dotori.mxl",
   },
   {
+    id: "3_guseulbi",
+    name: "구슬비",
+    grade: 3,
+    mxlPath: "./assets/songs/3_guseulbi.mxl",
+  },
+  {
+    id: "3_somsatang",
+    name: "솜사탕",
+    grade: 3,
+    mxlPath: "./assets/songs/3_somsatang.mxl",
+  },
+  {
+    id: "3_jamjari",
+    name: "잠자리",
+    grade: 3,
+    mxlPath: "./assets/songs/3_jamjari.mxl",
+  },
+  {
     id: "4_namulnorae",
     name: "나물노래",
     grade: 4,
@@ -229,29 +282,129 @@ const SONG_OPTIONS = [
     mxlPath: "./assets/songs/4_jongdalsaee_haru.mxl",
   },
   {
+    id: "4_jageun_sesang",
+    name: "작은 세상",
+    grade: 4,
+    mxlPath: "./assets/songs/4_jageun_sesang.mxl",
+  },
+  {
+    id: "4_heosuabi_ajeossi",
+    name: "허수아비 아저씨",
+    grade: 4,
+    mxlPath: "./assets/songs/4_heosuabi_ajeossi.mxl",
+  },
+  {
     id: "5_doremisong",
     name: "도레미송",
     grade: 5,
     mxlPath: "./assets/songs/5_doremisong.mxl",
+  },
+  {
+    id: "5_eommaya_nunaya",
+    name: "엄마야 누나야",
+    grade: 5,
+    mxlPath: "./assets/songs/5_eommaya_nunaya.mxl",
+  },
+  {
+    id: "5_supsogeul_georeoyo",
+    name: "숲속을 걸어요",
+    grade: 5,
+    mxlPath: "./assets/songs/5_supsogeul_georeoyo.mxl",
+  },
+  {
+    id: "5_gichareul_tago",
+    name: "기차를 타고",
+    grade: 5,
+    mxlPath: "./assets/songs/5_gichareul_tago.mxl",
+  },
+  {
+    id: "5_gosari_kkeokja",
+    name: "고사리 꺾자",
+    grade: 5,
+    mxlPath: "./assets/songs/5_gosari_kkeokja.mxl",
+  },
+  {
+    id: "6_namuui_norae",
+    name: "나무의 노래",
+    grade: 6,
+    mxlPath: "./assets/songs/6_namuui_norae.mxl",
+  },
+  {
+    id: "6_geumdaraekkung",
+    name: "금다래꿍",
+    grade: 6,
+    mxlPath: "./assets/songs/6_geumdaraekkung.mxl",
+  },
+  {
+    id: "6_neulliriya",
+    name: "늴리리야",
+    grade: 6,
+    mxlPath: "./assets/songs/6_neulliriya.mxl",
+  },
+  {
+    id: "6_saessakdeulida",
+    name: "새싹들이다",
+    grade: 6,
+    mxlPath: "./assets/songs/6_saessakdeulida.mxl",
+  },
+  {
+    id: "6_seuwanigang",
+    name: "스와니강",
+    grade: 6,
+    mxlPath: "./assets/songs/6_seuwanigang.mxl",
   },
 ];
 
 const SCORE_BOTTOM_ICONS = {
   gabaram: { src: "./assets/score-icons/autumn2.png", alt: "가을바람 아이콘" },
   "3_dotori": { src: "./assets/score-icons/acorn.png", alt: "도토리 아이콘" },
+  "3_guseulbi": { src: "./assets/score-icons/guseulbi.png", alt: "구슬비 아이콘" },
+  "3_somsatang": { src: "./assets/score-icons/somsatang.png", alt: "솜사탕 아이콘" },
+  "3_jamjari": { src: "./assets/score-icons/jamjari.png", alt: "잠자리 아이콘" },
   "4_jongdalsaee_haru": { src: "./assets/score-icons/bird.png", alt: "종달새의 하루 아이콘" },
   "4_namulnorae": { src: "./assets/score-icons/herbs.png", alt: "나물노래 아이콘" },
+  "4_heosuabi_ajeossi": { src: "./assets/score-icons/heosuabi2.png", alt: "허수아비 아저씨 아이콘" },
   "5_doremisong": { src: "./assets/score-icons/doremi.png", alt: "도레미송 아이콘" },
+  "5_supsogeul_georeoyo": { src: "./assets/score-icons/supsok.png", alt: "숲속을 걸어요 아이콘" },
+  "5_gichareul_tago": { src: "./assets/score-icons/gicha.png", alt: "기차를 타고 아이콘" },
+  "5_gosari_kkeokja": { src: "./assets/score-icons/gosari.png", alt: "고사리 꺾자 아이콘" },
+  "6_namuui_norae": { src: "./assets/score-icons/namuinorae.png", alt: "나무의 노래 아이콘" },
+  "6_saessakdeulida": { src: "./assets/score-icons/saessak.png", alt: "새싹들이다 아이콘" },
 };
 
 const SCORE_ICON_X_BY_SONG = {
+  "3_guseulbi": { desktop: -360, mobile: -300 },
+  "3_somsatang": { desktop: -360, mobile: -300 },
+  "4_heosuabi_ajeossi": { desktop: -330, mobile: -270 },
   "4_namulnorae": { desktop: -430, mobile: -355 },
   "4_jongdalsaee_haru": { desktop: -365, mobile: -300 },
   "5_doremisong": { desktop: -430, mobile: -355 },
+  "5_supsogeul_georeoyo": { desktop: -430, mobile: -355 },
+  "5_gichareul_tago": { desktop: -420, mobile: -340 },
+  "5_gosari_kkeokja": { desktop: -355, mobile: -290 },
+  "6_namuui_norae": { desktop: -340, mobile: -285 },
+  "6_saessakdeulida": { desktop: -340, mobile: -285 },
+};
+const SCORE_ICON_Y_BY_SONG = {
+  "5_gichareul_tago": { desktop: 24, mobile: 24 },
+};
+const SCORE_ICON_SIZE_BY_SONG = {
+  "5_gichareul_tago": 1.32,
+};
+const SONG_COMPOSER_OVERRIDE = {
+  "4_jageun_sesang": "셔먼 작곡",
+  "6_seuwanigang": "포스터 작곡",
+};
+const NO_FIT_SONGS = new Set(["6_namuui_norae", "6_saessakdeulida", "5_gichareul_tago"]);
+const NO_FIT_SCALE_BY_SONG = {
+  "6_namuui_norae": 0.9,
+  "6_saessakdeulida": 0.9,
+  "5_gichareul_tago": 0.9,
 };
 
 const SHARP_ORDER = ["F", "C", "G", "D", "A", "E", "B"];
 const FLAT_ORDER = ["B", "E", "A", "D", "G", "C", "F"];
+const SUBMISSION_STORAGE_KEY = "pium_modul3_submissions_v1";
 
 function showToast(message) {
   dom.toast.textContent = message;
@@ -439,6 +592,11 @@ function updateScoreBottomIcon() {
   const offset = SCORE_ICON_X_BY_SONG[appState.currentSongId] || { desktop: -280, mobile: -225 };
   dom.scoreBottomIconWrap.style.setProperty("--score-icon-x", `${offset.desktop}px`);
   dom.scoreBottomIconWrap.style.setProperty("--score-icon-x-sm", `${offset.mobile}px`);
+  const yOffset = SCORE_ICON_Y_BY_SONG[appState.currentSongId] || { desktop: 34, mobile: 34 };
+  dom.scoreBottomIconWrap.style.setProperty("--score-icon-top", `${yOffset.desktop}px`);
+  dom.scoreBottomIconWrap.style.setProperty("--score-icon-top-sm", `${yOffset.mobile}px`);
+  const iconScale = SCORE_ICON_SIZE_BY_SONG[appState.currentSongId] ?? 1;
+  dom.scoreBottomIcon.style.setProperty("--score-icon-size-scale", `${iconScale}`);
   dom.scoreBottomIconWrap.classList.remove("is-hidden");
 }
 
@@ -451,6 +609,18 @@ function applyScoreViewportFit() {
   container.style.height = "auto";
   content.style.transform = "";
   content.style.transformOrigin = "";
+
+  if (NO_FIT_SONGS.has(appState.currentSongId)) {
+    const scale = NO_FIT_SCALE_BY_SONG[appState.currentSongId] ?? 1;
+    const naturalHeight = Math.max(1, content.scrollHeight || content.getBoundingClientRect().height || 1);
+    content.style.transformOrigin = "top left";
+    content.style.transform = `scale(${scale})`;
+    container.style.height = `${Math.max(200, Math.round(naturalHeight * scale + 14))}px`;
+    if (dom.scoreBottomIconWrap) {
+      dom.scoreBottomIconWrap.style.setProperty("--score-fit-scale", `${scale}`);
+    }
+    return;
+  }
 
   const availableWidth = Math.max(120, container.clientWidth - 8);
   const top = container.getBoundingClientRect().top;
@@ -476,6 +646,15 @@ function queueScoreViewportFit() {
       applyScoreViewportFit();
     });
   });
+}
+
+function updateSongLayoutMode() {
+  if (!dom.editorScreen) return;
+  dom.editorScreen.classList.toggle("song-scroll-mode", NO_FIT_SONGS.has(appState.currentSongId));
+}
+
+function updateBodyOverflowBySong() {
+  document.body.style.overflow = "hidden";
 }
 
 function isMeasureInMission(measureNumber) {
@@ -680,6 +859,7 @@ function parseMusicXMLToModel(xmlText) {
       }
 
       const tieInfo = Array.from(noteNode.querySelectorAll("tie")).map((tieEl) => tieEl.getAttribute("type"));
+      const isStaccato = Boolean(noteNode.querySelector("notations > articulations > staccato"));
       const lyricText = getNoteLyricText(noteNode);
 
       const noteModel = {
@@ -695,6 +875,7 @@ function parseMusicXMLToModel(xmlText) {
         pitch,
         keyFifths: currentKeyFifths,
         tieInfo,
+        isStaccato,
         lyricText,
         xmlNode: noteNode,
         renderedElement: null,
@@ -788,17 +969,454 @@ function openSaveOverlay() {
 
 function setActiveHomeGrade(grade) {
   appState.homeGrade = Number(grade);
+  if (dom.currentGradeLabel) {
+    dom.currentGradeLabel.textContent = `${appState.homeGrade}학년`;
+  }
   dom.stageButtons.forEach((button) => {
     const buttonGrade = Number(button.dataset.grade);
     button.classList.toggle("active", buttonGrade === appState.homeGrade);
   });
 }
 
+function getStoredSubmissions() {
+  try {
+    const raw = window.localStorage.getItem(SUBMISSION_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (error) {
+    console.error("[getStoredSubmissions]", error);
+    return [];
+  }
+}
+
+function saveStoredSubmissions(submissions) {
+  try {
+    window.localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(submissions));
+  } catch (error) {
+    console.error("[saveStoredSubmissions]", error);
+  }
+}
+
+function formatSubmissionTime(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "-";
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} ${String(
+    date.getHours()
+  ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function submitCurrentSong(studentName) {
+  if (!appState.xmlDoc) return false;
+  const song = getCurrentSongOption();
+  const xmlText = new XMLSerializer().serializeToString(appState.xmlDoc);
+  const submissions = getStoredSubmissions();
+  const safeName = String(studentName || "").trim();
+  if (!safeName) return false;
+  submissions.unshift({
+    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    studentName: safeName,
+    songId: song.id,
+    songName: song.name,
+    grade: Number(song.grade) || appState.homeGrade || 0,
+    submittedAt: new Date().toISOString(),
+    xmlText,
+  });
+  saveStoredSubmissions(submissions);
+  saveCurrentSongDraft();
+  appState.loadedXmlBaseline = xmlText;
+  return true;
+}
+
+function openSubmitOverlay() {
+  if (
+    !dom.submitOverlay ||
+    !dom.submitNameInput ||
+    !dom.submitConfirmButton ||
+    !dom.submitCancelButton
+  ) {
+    return Promise.resolve(null);
+  }
+  dom.submitOverlay.classList.remove("is-hidden");
+  dom.submitNameInput.value = "";
+  requestAnimationFrame(() => dom.submitNameInput.focus());
+  return new Promise((resolve) => {
+    const onConfirm = () => {
+      const name = String(dom.submitNameInput.value || "").trim();
+      if (!name) {
+        showToast("이름을 입력해 주세요");
+        dom.submitNameInput.focus();
+        return;
+      }
+      cleanup(name);
+    };
+    const onCancel = () => cleanup(null);
+    const onKey = (event) => {
+      if (event.key === "Escape") cleanup(null);
+      if (event.key === "Enter") onConfirm();
+    };
+    const cleanup = (result) => {
+      dom.submitConfirmButton.removeEventListener("click", onConfirm);
+      dom.submitCancelButton.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKey);
+      dom.submitOverlay.classList.add("is-hidden");
+      resolve(result);
+    };
+    dom.submitConfirmButton.addEventListener("click", onConfirm);
+    dom.submitCancelButton.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+function updateTeacherIcon(songId, isPlaying = false) {
+  if (!dom.teacherScoreContainer) return;
+  if (!dom.teacherScoreIconWrap || !dom.teacherScoreIcon) {
+    const wrap = document.createElement("div");
+    wrap.id = "teacher-score-icon-wrap";
+    wrap.className = "teacher-score-icon-wrap is-hidden";
+    wrap.setAttribute("aria-hidden", "true");
+    const img = document.createElement("img");
+    img.id = "teacher-score-icon";
+    img.className = "teacher-score-icon";
+    wrap.appendChild(img);
+    dom.teacherScoreContainer.appendChild(wrap);
+    dom.teacherScoreIconWrap = wrap;
+    dom.teacherScoreIcon = img;
+  }
+  const icon = SCORE_BOTTOM_ICONS[songId];
+  if (!icon) {
+    dom.teacherScoreIconWrap.classList.add("is-hidden");
+    dom.teacherScoreIconWrap.classList.remove("is-playing");
+    dom.teacherScoreIcon.removeAttribute("src");
+    dom.teacherScoreIcon.alt = "";
+    return;
+  }
+  dom.teacherScoreIcon.src = icon.src;
+  dom.teacherScoreIcon.alt = icon.alt || "";
+  const offset = SCORE_ICON_X_BY_SONG[songId] || { desktop: -280, mobile: -225 };
+  dom.teacherScoreIconWrap.style.setProperty("--teacher-icon-x", `${offset.desktop}px`);
+  dom.teacherScoreIconWrap.style.setProperty("--teacher-icon-x-sm", `${offset.mobile}px`);
+  const yOffset = SCORE_ICON_Y_BY_SONG[songId] || { desktop: 34, mobile: 34 };
+  dom.teacherScoreIconWrap.style.setProperty("--teacher-icon-top", `${yOffset.desktop}px`);
+  dom.teacherScoreIconWrap.style.setProperty("--teacher-icon-top-sm", `${yOffset.mobile}px`);
+  const iconScale = SCORE_ICON_SIZE_BY_SONG[songId] ?? 1;
+  dom.teacherScoreIcon.style.setProperty("--teacher-icon-size-scale", `${iconScale}`);
+  dom.teacherScoreIconWrap.classList.remove("is-hidden");
+  dom.teacherScoreIconWrap.classList.toggle("is-playing", Boolean(isPlaying));
+}
+
+function mountTeacherIconIntoScoreContent() {
+  if (!dom.teacherScoreContainer || !dom.teacherScoreIconWrap) return;
+  const content = dom.teacherScoreContainer.firstElementChild;
+  if (!(content instanceof HTMLElement)) return;
+  if (dom.teacherScoreIconWrap.parentElement !== content) {
+    content.appendChild(dom.teacherScoreIconWrap);
+  }
+  if (content.style.position !== "relative") {
+    content.style.position = "relative";
+  }
+}
+
+function updateTeacherTempoControls() {
+  if (dom.teacherTempoSlider) dom.teacherTempoSlider.value = String(Math.max(0, Math.min(200, Math.round(appState.teacherTempo || 90))));
+  if (dom.teacherTempoValue) dom.teacherTempoValue.textContent = `${Math.round(appState.teacherTempo || 90)} BPM`;
+}
+
+async function openTeacherFullscreen() {
+  const submission = appState.teacherSelectedSubmission;
+  if (!submission || !dom.teacherFullscreenOverlay || !dom.teacherFullscreenScoreContainer) {
+    showToast("먼저 제출 악보를 선택하세요");
+    return;
+  }
+  dom.teacherFullscreenOverlay.classList.remove("is-hidden");
+  dom.teacherFullscreenScoreContainer.innerHTML = "";
+  try {
+    appState.teacherFullscreenOsmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(dom.teacherFullscreenScoreContainer, {
+      autoResize: true,
+      drawTitle: true,
+      drawComposer: true,
+      drawPartNames: false,
+      drawMeasureNumbers: true,
+      newSystemFromXML: true,
+      newSystemFromNewPageInXML: true,
+    });
+    await appState.teacherFullscreenOsmd.load(stripCredits(submission.xmlText));
+    await appState.teacherFullscreenOsmd.render();
+  } catch (error) {
+    console.error("[openTeacherFullscreen]", error);
+    dom.teacherFullscreenScoreContainer.innerHTML = '<p class="teacher-submission-meta">전체보기 렌더링에 실패했어요.</p>';
+  }
+}
+
+function closeTeacherFullscreen() {
+  dom.teacherFullscreenOverlay?.classList.add("is-hidden");
+}
+
+function updateTeacherListCollapsedUI() {
+  if (!dom.teacherWorkspace || !dom.teacherListToggleButton) return;
+  dom.teacherWorkspace.classList.toggle("list-collapsed", appState.teacherListCollapsed);
+  dom.teacherListToggleButton.textContent = appState.teacherListCollapsed ? "펼치기" : "접기";
+}
+
+async function renderTeacherSubmissionScore(submission) {
+  if (!dom.teacherScoreContainer || !dom.teacherSubmissionMeta) return;
+  stopTeacherPlayback();
+  appState.teacherSelectedSubmission = null;
+  if (!submission) {
+    dom.teacherSubmissionMeta.textContent = "제출 악보를 선택하세요.";
+    dom.teacherScoreContainer.innerHTML = "";
+    updateTeacherIcon(null, false);
+    return;
+  }
+  dom.teacherSubmissionMeta.textContent = `${submission.grade}학년 · ${submission.songName} · 제출 ${formatSubmissionTime(
+    submission.submittedAt
+  )}`;
+  dom.teacherScoreContainer.innerHTML = "";
+  try {
+    if (!window.opensheetmusicdisplay) throw new Error("OSMD 라이브러리를 찾지 못했습니다.");
+    appState.teacherOsmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(dom.teacherScoreContainer, {
+      autoResize: true,
+      drawTitle: true,
+      drawComposer: true,
+      drawPartNames: false,
+      drawMeasureNumbers: true,
+      newSystemFromXML: true,
+      newSystemFromNewPageInXML: true,
+    });
+    await appState.teacherOsmd.load(stripCredits(submission.xmlText));
+    await appState.teacherOsmd.render();
+    const parsed = parseMusicXMLToModel(submission.xmlText);
+    appState.teacherSelectedSubmission = {
+      ...submission,
+      noteModels: parsed.noteModels,
+      measureModels: parsed.measureModels,
+    };
+    updateTeacherIcon(submission.songId, false);
+    mountTeacherIconIntoScoreContent();
+  } catch (error) {
+    console.error("[renderTeacherSubmissionScore]", error);
+    dom.teacherScoreContainer.innerHTML = '<p class="teacher-submission-meta">악보를 렌더링하지 못했어요.</p>';
+    updateTeacherIcon(null, false);
+  }
+}
+
+function clearTeacherPlaybackSchedule() {
+  if (!window.Tone) return;
+  appState.teacherPlaybackEventIds.forEach((id) => Tone.Transport.clear(id));
+  appState.teacherPlaybackEventIds = [];
+  if (appState.teacherPlaybackStopEventId !== null) {
+    Tone.Transport.clear(appState.teacherPlaybackStopEventId);
+    appState.teacherPlaybackStopEventId = null;
+  }
+}
+
+function stopTeacherPlayback() {
+  if (window.Tone) {
+    Tone.Transport.stop();
+    Tone.Transport.position = 0;
+  }
+  clearTeacherPlaybackSchedule();
+  appState.teacherPlaybackState = "stopped";
+  updateTeacherIcon(appState.teacherSelectedSubmission?.songId || null, false);
+}
+
+function getTeacherNoteDurationSec(note, measureModels, tempo) {
+  const measure = measureModels.find((m) => m.number === note.measureNumber);
+  const durationBeats = note.durationDivisions / (measure?.divisions || 1);
+  return durationBeats * (60 / (tempo || 90));
+}
+
+function buildTeacherPlaybackNotes(rawNotes, measureModels, tempo) {
+  const playback = [];
+  for (let i = 0; i < rawNotes.length; i += 1) {
+    const note = rawNotes[i];
+    if (!note) continue;
+    if (note.isRest || !note.pitch) {
+      playback.push({
+        isRest: true,
+        pitch: null,
+        keyFifths: note.keyFifths ?? 0,
+        staccato: false,
+        durationSec: getTeacherNoteDurationSec(note, measureModels, tempo),
+      });
+      continue;
+    }
+    let durationSec = getTeacherNoteDurationSec(note, measureModels, tempo);
+    let isStaccato = Boolean(note.isStaccato);
+    let cursor = i;
+    while (hasTieType(rawNotes[cursor], "start")) {
+      const next = rawNotes[cursor + 1];
+      if (!next || next.isRest || !next.pitch) break;
+      if (!areSamePitchByMidi(rawNotes[cursor], next)) break;
+      if (!hasTieType(next, "stop")) break;
+      durationSec += getTeacherNoteDurationSec(next, measureModels, tempo);
+      isStaccato = isStaccato || Boolean(next.isStaccato);
+      cursor += 1;
+    }
+    playback.push({
+      isRest: false,
+      pitch: note.pitch,
+      keyFifths: note.keyFifths ?? 0,
+      staccato: isStaccato,
+      durationSec,
+    });
+    i = cursor;
+  }
+  return playback;
+}
+
+async function playTeacherSubmission() {
+  try {
+    const submission = appState.teacherSelectedSubmission;
+    if (!submission) return showToast("먼저 제출 악보를 선택하세요");
+    if (!window.Tone) return showToast("재생 엔진(Tone.js)을 찾을 수 없어요");
+    await Tone.start();
+    Tone.Transport.cancel(0);
+    stopMetronomeLoop();
+    clearTeacherPlaybackSchedule();
+    Tone.Transport.stop();
+    Tone.Transport.position = 0;
+    Tone.Transport.bpm.value = appState.teacherTempo || 90;
+
+    const rawNotes = (submission.noteModels || []).filter((n) => !n.isGrace && !n.isChord);
+    const notes = buildTeacherPlaybackNotes(rawNotes, submission.measureModels || [], appState.teacherTempo || 90);
+    if (!notes.length) return showToast("재생할 음표가 없어요");
+
+    const sampler = await getSampler(appState.teacherCurrentInstrumentId || "acoustic_piano");
+    if (!sampler) return showToast("악기 샘플을 로드하지 못했어요");
+
+    let cursorSec = 0;
+    notes.forEach((note) => {
+      if (!note.isRest && note.pitch) {
+        const midi = pitchToMidi(note.pitch, note.keyFifths ?? 0);
+        const noteName = midiToToneNoteName(midi);
+        const playedDuration = note.staccato
+          ? Math.max(0.04, note.durationSec * 0.45)
+          : Math.max(0.05, note.durationSec * 0.96);
+        const id = Tone.Transport.schedule((time) => {
+          sampler.triggerAttackRelease(noteName, playedDuration, time, 0.9);
+        }, cursorSec);
+        appState.teacherPlaybackEventIds.push(id);
+      }
+      cursorSec += Math.max(0.01, note.durationSec);
+    });
+
+    appState.teacherPlaybackStopEventId = Tone.Transport.scheduleOnce(() => {
+      stopTeacherPlayback();
+    }, Math.max(0.05, cursorSec + 0.02));
+
+    Tone.Transport.start("+0.01");
+    appState.teacherPlaybackState = "playing";
+    updateTeacherIcon(submission.songId, true);
+  } catch (error) {
+    console.error("[playTeacherSubmission]", error);
+    stopTeacherPlayback();
+    showToast(`재생 오류: ${error.message || "알 수 없는 오류"}`);
+  }
+}
+
+function initTeacherInstrumentSelect() {
+  if (!dom.teacherInstrumentSelect) return;
+  dom.teacherInstrumentSelect.innerHTML = "";
+  SAMPLE_INSTRUMENTS.forEach((instrument) => {
+    const option = document.createElement("option");
+    option.value = instrument.id;
+    option.textContent = instrument.name;
+    dom.teacherInstrumentSelect.appendChild(option);
+  });
+  if (!SAMPLE_INSTRUMENTS.some((item) => item.id === appState.teacherCurrentInstrumentId)) {
+    appState.teacherCurrentInstrumentId = SAMPLE_INSTRUMENTS[0]?.id || "acoustic_piano";
+  }
+  dom.teacherInstrumentSelect.value = appState.teacherCurrentInstrumentId;
+  dom.teacherInstrumentSelect.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement)) return;
+    appState.teacherCurrentInstrumentId = target.value;
+  });
+}
+
+function renderTeacherSubmissionList() {
+  if (!dom.teacherSubmissionList) return;
+  const submissions = getStoredSubmissions();
+  dom.teacherSubmissionList.innerHTML = "";
+  if (submissions.length === 0) {
+    appState.teacherSelectedSubmissionId = null;
+    const empty = document.createElement("p");
+    empty.className = "teacher-submission-meta";
+    empty.textContent = "아직 제출된 악보가 없습니다.";
+    dom.teacherSubmissionList.appendChild(empty);
+    renderTeacherSubmissionScore(null);
+    return;
+  }
+
+  submissions.forEach((submission) => {
+    const item = document.createElement("article");
+    item.className = "teacher-item";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "teacher-delete-btn";
+    deleteBtn.dataset.deleteSubmissionId = submission.id;
+    deleteBtn.textContent = "×";
+    deleteBtn.setAttribute("aria-label", "제출 삭제");
+    const title = document.createElement("p");
+    title.className = "teacher-item-title";
+    title.textContent = `${submission.grade}학년 - ${submission.studentName || "이름없음"}`;
+    const meta = document.createElement("p");
+    meta.className = "teacher-item-meta";
+    meta.textContent = `${submission.songName} · 제출 ${formatSubmissionTime(submission.submittedAt)}`;
+    const row = document.createElement("div");
+    row.className = "row";
+    const viewBtn = document.createElement("button");
+    viewBtn.type = "button";
+    viewBtn.className = "action-btn";
+    viewBtn.dataset.submissionId = submission.id;
+    viewBtn.textContent = "악보 보기";
+    row.appendChild(viewBtn);
+    item.append(deleteBtn, title, meta, row);
+    dom.teacherSubmissionList.appendChild(item);
+  });
+
+  const selected =
+    submissions.find((item) => item.id === appState.teacherSelectedSubmissionId) || submissions[0] || null;
+  appState.teacherSelectedSubmissionId = selected?.id || null;
+  renderTeacherSubmissionScore(selected);
+}
+
+function deleteSubmissionById(submissionId) {
+  if (!submissionId) return;
+  const submissions = getStoredSubmissions();
+  const next = submissions.filter((item) => item.id !== submissionId);
+  saveStoredSubmissions(next);
+  if (appState.teacherSelectedSubmissionId === submissionId) {
+    appState.teacherSelectedSubmissionId = next[0]?.id || null;
+  }
+  renderTeacherSubmissionList();
+}
+
+function showTeacherScreen() {
+  stopScore();
+  stopTeacherPlayback();
+  closeTeacherFullscreen();
+  dom.homeScreen?.classList.add("is-hidden");
+  dom.editorScreen?.classList.add("is-hidden");
+  dom.teacherScreen?.classList.remove("is-hidden");
+  updateBodyOverflowBySong();
+  updateTeacherTempoControls();
+  updateTeacherListCollapsedUI();
+  renderTeacherSubmissionList();
+}
+
 function showHomeScreen() {
   stopScore();
+  stopTeacherPlayback();
+  closeTeacherFullscreen();
   dom.homeScreen?.classList.remove("is-hidden");
+  dom.teacherScreen?.classList.add("is-hidden");
   dom.editorScreen?.classList.add("is-hidden");
   setActiveHomeGrade(appState.homeGrade || 3);
+  updateBodyOverflowBySong();
+  updateSongLayoutMode();
   requestAnimationFrame(() => {
     populateHomeDecor();
   });
@@ -814,6 +1432,11 @@ async function openEditorForSong(songId) {
   appState.homeGrade = Number(song.grade) || appState.homeGrade;
   initSongSelect();
   dom.homeScreen?.classList.add("is-hidden");
+  dom.teacherScreen?.classList.add("is-hidden");
+  stopTeacherPlayback();
+  closeTeacherFullscreen();
+  updateBodyOverflowBySong();
+  updateSongLayoutMode();
   dom.editorScreen?.classList.remove("is-hidden");
   if (dom.songSelect) dom.songSelect.value = song.id;
   stopScore();
@@ -1071,12 +1694,12 @@ async function loadRules(parsed) {
 async function loadScoreXml() {
   const song = getCurrentSongOption();
   if (song.musicxmlPath) {
-    const musicXmlRes = await fetch(song.musicxmlPath);
+    const musicXmlRes = await fetch(song.musicxmlPath, { cache: "no-store" });
     if (musicXmlRes.ok) return musicXmlRes.text();
   }
 
   if (song.mxlPath) {
-    const mxlRes = await fetch(song.mxlPath);
+    const mxlRes = await fetch(song.mxlPath, { cache: "no-store" });
     if (mxlRes.ok) return parseMxlToXml(await mxlRes.arrayBuffer());
   }
   throw new Error("선택한 곡의 score.musicxml / score.mxl 로드 실패");
@@ -1084,15 +1707,26 @@ async function loadScoreXml() {
 
 function stripCredits(xmlText) {
   const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+  const movementTitle = (doc.querySelector("movement-title")?.textContent || "").trim();
+  // Keep 작사/작곡/작사작곡 credits. Remove only exact duplicate title credits.
   Array.from(doc.querySelectorAll("credit")).forEach((node) => {
-    const text = node.textContent || "";
-    if (text.includes("김규환")) {
+    const creditText = Array.from(node.querySelectorAll("credit-words"))
+      .map((el) => (el.textContent || "").trim())
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (creditText === "김규환") {
+      node.remove();
+      return;
+    }
+    if (movementTitle && creditText && creditText === movementTitle) {
       node.remove();
     }
   });
+  // Remove standalone left creator name (e.g., "김규환"), keep right-side credit text.
   Array.from(doc.querySelectorAll("identification > creator")).forEach((node) => {
-    const text = node.textContent || "";
-    if (text.includes("김규환")) {
+    const creatorText = (node.textContent || "").trim();
+    if (creatorText === "김규환") {
       node.remove();
     }
   });
@@ -1117,6 +1751,36 @@ function ensureSongTitle(xmlDoc, title) {
     else scorePartwise.insertBefore(movementTitle, scorePartwise.firstChild);
   }
   movementTitle.textContent = title;
+}
+
+function applySongComposerOverride(xmlDoc, songId) {
+  if (!xmlDoc || !songId) return;
+  const composerText = SONG_COMPOSER_OVERRIDE[songId];
+  if (!composerText) return;
+
+  let identification = xmlDoc.querySelector("score-partwise > identification");
+  if (!identification) {
+    const root = xmlDoc.querySelector("score-partwise") || xmlDoc.documentElement;
+    if (!root) return;
+    identification = xmlDoc.createElement("identification");
+    const partList = root.querySelector("part-list");
+    if (partList) root.insertBefore(identification, partList);
+    else root.appendChild(identification);
+  }
+
+  Array.from(identification.querySelectorAll("creator")).forEach((node) => node.remove());
+  const creator = xmlDoc.createElement("creator");
+  creator.setAttribute("type", "composer");
+  creator.textContent = composerText;
+  identification.appendChild(creator);
+
+  // Some files use explicit credit words like "작곡가 / 편곡가".
+  Array.from(xmlDoc.querySelectorAll("credit-words")).forEach((node) => {
+    const text = (node.textContent || "").trim();
+    if (text === "작곡가 / 편곡가") {
+      node.textContent = composerText;
+    }
+  });
 }
 
 function getScoreNoteElements() {
@@ -1531,7 +2195,7 @@ async function renderScore(xmlText) {
   appState.osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(dom.scoreContainer, {
     autoResize: true,
     drawTitle: true,
-    drawComposer: false,
+    drawComposer: true,
     drawPartNames: false,
     drawMeasureNumbers: true,
     newSystemFromXML: true,
@@ -2357,6 +3021,62 @@ function getPlayableMeasureNotes(measureNumber) {
   );
 }
 
+function hasTieType(note, type) {
+  return Array.isArray(note?.tieInfo) && note.tieInfo.includes(type);
+}
+
+function areSamePitchByMidi(a, b) {
+  if (!a?.pitch || !b?.pitch) return false;
+  return pitchToMidi(a.pitch, a.keyFifths ?? 0) === pitchToMidi(b.pitch, b.keyFifths ?? 0);
+}
+
+function buildPlaybackNotes(rawNotes) {
+  const playback = [];
+  for (let i = 0; i < rawNotes.length; i += 1) {
+    const note = rawNotes[i];
+    if (!note) continue;
+
+    if (note.isRest || !note.pitch) {
+      playback.push({
+        noteId: note.noteId,
+        isRest: true,
+        pitch: null,
+        keyFifths: note.keyFifths ?? 0,
+        staccato: false,
+        durationSec: getNoteDurationSec(note),
+      });
+      continue;
+    }
+
+    let durationSec = getNoteDurationSec(note);
+    let isStaccato = Boolean(note.isStaccato);
+    let cursor = i;
+
+    // Tie handling: same-pitch tied notes are played as one sustained note.
+    while (hasTieType(rawNotes[cursor], "start")) {
+      const next = rawNotes[cursor + 1];
+      if (!next || next.isRest || !next.pitch) break;
+      if (!areSamePitchByMidi(rawNotes[cursor], next)) break;
+      if (!hasTieType(next, "stop")) break;
+      durationSec += getNoteDurationSec(next);
+      isStaccato = isStaccato || Boolean(next.isStaccato);
+      cursor += 1;
+    }
+
+    playback.push({
+      noteId: note.noteId,
+      isRest: false,
+      pitch: note.pitch,
+      keyFifths: note.keyFifths ?? 0,
+      staccato: isStaccato,
+      durationSec,
+    });
+
+    i = cursor;
+  }
+  return playback;
+}
+
 function midiToToneNoteName(midi) {
   const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const pc = ((midi % 12) + 12) % 12;
@@ -2530,18 +3250,23 @@ function startMetronomeLoop() {
   if (!window.Tone || !appState.metronomeEnabled) return;
   ensureMetronomeSynth();
   stopMetronomeLoop();
-  const beatSec = 60 / (appState.tempo || 90);
-  if (!Number.isFinite(beatSec) || beatSec <= 0) return;
+  const { beats, beatType } = parseTimeSignature(appState.rules?.timeSignature || "4/4");
+  const isCompound = beatType === 8 && beats >= 6 && beats % 3 === 0;
+  const accentCycle = Math.max(1, isCompound ? Math.round(beats / 3) : beats);
+  const quarterSec = 60 / (appState.tempo || 90);
+  const quarterUnitsPerPulse = isCompound ? 1.5 : 4 / Math.max(1, beatType);
+  const pulseSec = quarterSec * quarterUnitsPerPulse;
+  if (!Number.isFinite(pulseSec) || pulseSec <= 0) return;
   const nowSec = Tone.Transport.seconds || 0;
-  const beatIndex = Math.floor(nowSec / beatSec);
+  const beatIndex = Math.floor(nowSec / pulseSec);
   const nextBeatTime = nowSec;
-  appState.metronomeBeatCounter = beatIndex % 4;
+  appState.metronomeBeatCounter = beatIndex % accentCycle;
   appState.metronomeRepeatId = Tone.Transport.scheduleRepeat((time) => {
-    const accent = appState.metronomeBeatCounter % 4 === 0;
+    const accent = appState.metronomeBeatCounter % accentCycle === 0;
     const note = accent ? "C5" : "A4";
     appState.metronomeSynth.triggerAttackRelease(note, "32n", time, accent ? 0.7 : 0.42);
     appState.metronomeBeatCounter += 1;
-  }, "4n", nextBeatTime);
+  }, pulseSec, nextBeatTime);
 }
 
 function normalizeAccidentalsInCurrentXml() {
@@ -2592,13 +3317,13 @@ function getNoteDurationSec(note) {
 
 function buildScheduledNotesFromOffset(notes, startOffsetSec = 0) {
   if (startOffsetSec <= 0) {
-    return notes.map((note) => ({ note, durationSec: getNoteDurationSec(note), offsetSec: 0 }));
+    return notes.map((note) => ({ note, durationSec: note.durationSec, offsetSec: 0 }));
   }
 
   const scheduled = [];
   let elapsed = 0;
   notes.forEach((note) => {
-    const durationSec = getNoteDurationSec(note);
+    const durationSec = note.durationSec;
     const end = elapsed + durationSec;
     if (end <= startOffsetSec) {
       elapsed = end;
@@ -2620,11 +3345,12 @@ async function schedulePlaybackForNotes(notes, startOffsetSec = 0) {
   Tone.Transport.position = 0;
   Tone.Transport.bpm.value = appState.tempo || 90;
 
-  if (notes.length === 0) throw new Error("재생할 음표가 없어요");
+  const playbackNotes = buildPlaybackNotes(notes);
+  if (playbackNotes.length === 0) throw new Error("재생할 음표가 없어요");
   const sampler = await getSampler(appState.currentInstrumentId);
   if (!sampler) throw new Error("악기 샘플을 로드하지 못했습니다.");
 
-  const scheduledNotes = buildScheduledNotesFromOffset(notes, startOffsetSec);
+  const scheduledNotes = buildScheduledNotesFromOffset(playbackNotes, startOffsetSec);
   if (scheduledNotes.length === 0) throw new Error("재생할 음표가 없어요");
   let cursorSec = 0;
 
@@ -2634,11 +3360,14 @@ async function schedulePlaybackForNotes(notes, startOffsetSec = 0) {
     if (!note.isRest && note.pitch) {
       const midi = pitchToMidi(note.pitch, note.keyFifths ?? 0);
       const noteName = midiToToneNoteName(midi);
+      const playedDuration = note.staccato
+        ? Math.max(0.04, effectiveDuration * 0.45)
+        : Math.max(0.05, effectiveDuration * 0.96);
       const id = Tone.Transport.schedule((time) => {
         Tone.Draw.schedule(() => {
           setPlaybackActiveNote(note.noteId);
         }, time);
-        sampler.triggerAttackRelease(noteName, Math.max(0.05, effectiveDuration * 0.96), time, 0.9);
+        sampler.triggerAttackRelease(noteName, playedDuration, time, 0.9);
       }, cursorSec);
       appState.playbackEventIds.push(id);
       const clearId = Tone.Transport.schedule((time) => {
@@ -2647,7 +3376,7 @@ async function schedulePlaybackForNotes(notes, startOffsetSec = 0) {
             setPlaybackActiveNote(null);
           }
         }, time);
-      }, cursorSec + Math.max(0.04, effectiveDuration * 0.92));
+      }, cursorSec + Math.max(0.04, playedDuration * 0.92));
       appState.playbackEventIds.push(clearId);
     }
 
@@ -2878,6 +3607,7 @@ async function loadCurrentSong() {
   appState.rules = await loadRules(parsed);
   appState.xmlDoc = parsed.xmlDoc;
   ensureSongTitle(appState.xmlDoc, song?.name || appState.rules?.title || "");
+  applySongComposerOverride(appState.xmlDoc, song?.id);
   enforceSystemBreaksEvery(appState.xmlDoc, 4);
   appState.noteModels = parsed.noteModels;
   appState.measureModels = parsed.measureModels;
@@ -2905,6 +3635,8 @@ async function loadCurrentSong() {
   updateButtonsState();
   updateScoreBottomIcon();
   appState.loadedXmlBaseline = new XMLSerializer().serializeToString(appState.xmlDoc);
+  updateBodyOverflowBySong();
+  updateSongLayoutMode();
   queueScoreViewportFit();
 }
 
@@ -2931,6 +3663,75 @@ function wireEvents() {
       }
     }
     showHomeScreen();
+  });
+
+  dom.goTeacherButton?.addEventListener("click", () => {
+    showTeacherScreen();
+  });
+
+  dom.teacherBackButton?.addEventListener("click", () => {
+    showHomeScreen();
+  });
+
+  dom.teacherListToggleButton?.addEventListener("click", () => {
+    appState.teacherListCollapsed = !appState.teacherListCollapsed;
+    updateTeacherListCollapsedUI();
+  });
+
+  dom.teacherSubmissionList?.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const deleteBtn = target.closest("button[data-delete-submission-id]");
+    if (deleteBtn) {
+      const deleteId = deleteBtn.getAttribute("data-delete-submission-id");
+      if (!deleteId) return;
+      deleteSubmissionById(deleteId);
+      showToast("제출 악보를 삭제했어요");
+      return;
+    }
+    const button = target.closest("button[data-submission-id]");
+    if (!button) return;
+    const submissionId = button.getAttribute("data-submission-id");
+    if (!submissionId) return;
+    const submission = getStoredSubmissions().find((item) => item.id === submissionId);
+    if (!submission) return;
+    appState.teacherSelectedSubmissionId = submissionId;
+    renderTeacherSubmissionScore(submission);
+  });
+
+  dom.teacherPlayButton?.addEventListener("click", () => {
+    playTeacherSubmission();
+  });
+  dom.teacherStopButton?.addEventListener("click", () => {
+    stopTeacherPlayback();
+  });
+
+  dom.teacherTempoSlider?.addEventListener("input", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    const bpm = Math.max(0, Math.min(200, Number.parseInt(target.value || "90", 10) || 0));
+    appState.teacherTempo = bpm;
+    if (window.Tone && appState.teacherPlaybackState === "playing") {
+      Tone.Transport.bpm.value = bpm;
+    }
+    updateTeacherTempoControls();
+  });
+
+  dom.teacherFullscreenButton?.addEventListener("click", () => {
+    openTeacherFullscreen();
+  });
+  dom.teacherFullscreenCloseButton?.addEventListener("click", () => {
+    closeTeacherFullscreen();
+  });
+  dom.teacherFullscreenOverlay?.addEventListener("click", (event) => {
+    if (event.target === dom.teacherFullscreenOverlay) {
+      closeTeacherFullscreen();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !dom.teacherFullscreenOverlay?.classList.contains("is-hidden")) {
+      closeTeacherFullscreen();
+    }
   });
 
   dom.stageButtons.forEach((button) => {
@@ -3061,6 +3862,14 @@ function wireEvents() {
   });
   dom.pauseButton.addEventListener("click", pauseScore);
   dom.stopButton.addEventListener("click", stopScore);
+  dom.saveButton?.addEventListener("click", async () => {
+    if (!appState.xmlDoc) return;
+    const studentName = await openSubmitOverlay();
+    if (!studentName) return;
+    const ok = submitCurrentSong(studentName);
+    if (!ok) return;
+    showToast("제출했어요");
+  });
 
   if (dom.exportXmlButton) {
     dom.exportXmlButton.addEventListener("click", exportEditedMusicXml);
@@ -3242,6 +4051,9 @@ async function init() {
   try {
     initSongSelect();
     initInstrumentSelect();
+    initTeacherInstrumentSelect();
+    updateTeacherTempoControls();
+    updateTeacherListCollapsedUI();
     buildLyricPadButtons();
     resetLyricPad();
     setLyricPadVisible(false);

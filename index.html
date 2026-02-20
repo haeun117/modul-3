@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PIUM 부분창작 모듈 MVP</title>
-    <link rel="stylesheet" href="./style.css?v=20260219a17" />
+    <link rel="stylesheet" href="./style.css?v=20260220a43" />
   </head>
   <body>
     <main class="app">
       <section id="home-screen" class="home-screen">
         <header class="home-header">
-          <p class="kicker">PIUM</p>
           <h1>나만의 악보 만들기</h1>
+          <button id="go-teacher-btn" class="action-btn" type="button">교사용</button>
         </header>
 
         <div class="home-map" aria-label="학년 단계 선택 지도">
@@ -30,26 +30,73 @@
           <button type="button" class="stage-btn stage-5" data-grade="5">
             <span class="stage-title">5학년</span>
           </button>
-          <button type="button" class="stage-btn stage-6 disabled" data-grade="6" disabled>
+          <button type="button" class="stage-btn stage-6" data-grade="6">
             <span class="stage-title">6학년</span>
           </button>
         </div>
       </section>
 
+      <section id="teacher-screen" class="teacher-screen is-hidden">
+        <header class="teacher-header">
+          <h1>교사용 제출 악보 보기</h1>
+          <div class="teacher-header-actions">
+            <div class="teacher-playback-controls">
+              <div class="select-wrap">
+                <select id="teacher-instrument-select"></select>
+              </div>
+              <div class="teacher-tempo-wrap">
+                <input id="teacher-tempo-slider" type="range" min="0" max="200" value="90" step="1" />
+                <span id="teacher-tempo-value">90 BPM</span>
+              </div>
+              <button id="teacher-play-btn" class="icon-circle-btn" type="button" aria-label="재생" title="재생">▶</button>
+              <button id="teacher-stop-btn" class="icon-circle-btn" type="button" aria-label="정지" title="정지">■</button>
+            </div>
+            <button id="teacher-back-btn" class="action-btn" type="button">홈으로</button>
+          </div>
+        </header>
+        <section class="teacher-workspace">
+          <article class="teacher-list-pane">
+            <div class="teacher-list-head">
+              <h2>제출 목록</h2>
+              <button id="teacher-list-toggle-btn" class="action-btn" type="button">접기</button>
+            </div>
+            <div id="teacher-submission-list" class="teacher-submission-list"></div>
+          </article>
+          <article class="teacher-preview-pane">
+            <h2>악보 보기</h2>
+            <p id="teacher-submission-meta" class="teacher-submission-meta">제출 악보를 선택하세요.</p>
+            <div class="teacher-preview-top-actions">
+              <button id="teacher-fullscreen-btn" class="action-btn" type="button">악보 전체보기</button>
+            </div>
+            <div id="teacher-score-container" class="teacher-score-container"></div>
+          </article>
+        </section>
+      </section>
+      <div id="teacher-fullscreen-overlay" class="teacher-fullscreen-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="teacher-fullscreen-title">
+        <div class="teacher-fullscreen-card">
+          <div class="teacher-fullscreen-head">
+            <h2 id="teacher-fullscreen-title">악보 전체보기</h2>
+            <button id="teacher-fullscreen-close-btn" class="action-btn" type="button">닫기</button>
+          </div>
+          <div id="teacher-fullscreen-score-container" class="teacher-fullscreen-score-container"></div>
+        </div>
+      </div>
+
       <section id="editor-screen" class="editor-screen is-hidden">
         <header class="topbar">
-          <div class="topbar-title">
-            <p class="kicker">PIUM</p>
+          <div class="topbar-title-card">
             <h1>나만의 악보 만들기</h1>
           </div>
-          <div class="row topbar-controls">
-            <div class="topbar-song-select">
-              <span class="label">제목</span>
-              <div class="select-wrap song-select-wrap">
-                <select id="song-select"></select>
+          <div class="topbar-controls-card">
+            <div class="row topbar-controls">
+              <div class="topbar-song-select">
+                <span id="current-grade-label" class="label">3학년</span>
+                <div class="select-wrap song-select-wrap">
+                  <select id="song-select"></select>
+                </div>
               </div>
+              <button id="go-home-btn" class="action-btn" type="button">학년 선택</button>
             </div>
-            <button id="go-home-btn" class="action-btn" type="button">학년 선택</button>
           </div>
         </header>
 
@@ -127,7 +174,7 @@
             </section>
 
             <section class="tool-group">
-              <h3>악기 선택하기</h3>
+              <h3>들어보기</h3>
               <div class="row instrument-row">
                 <div class="select-wrap">
                   <select id="instrument-select"></select>
@@ -137,6 +184,9 @@
                 <button id="play-btn" class="icon-circle-btn" type="button" aria-label="재생" title="재생">▶</button>
                 <button id="pause-btn" class="icon-circle-btn" type="button" aria-label="일시정지" title="일시정지">❚❚</button>
                 <button id="stop-btn" class="icon-circle-btn" type="button" aria-label="정지" title="정지">■</button>
+              </div>
+              <div class="row wrap playback-row">
+                <button id="save-btn" class="action-btn" type="button">제출하기</button>
               </div>
             </section>
           </aside>
@@ -155,10 +205,20 @@
         </div>
       </div>
     </div>
+    <div id="submit-overlay" class="save-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="submit-overlay-title">
+      <div class="save-overlay-card submit-overlay-card">
+        <h3 id="submit-overlay-title">이름을 입력해주세요.</h3>
+        <input id="submit-name-input" class="submit-name-input" type="text" maxlength="20" placeholder="이름" />
+        <div class="row">
+          <button id="submit-confirm-btn" class="action-btn" type="button">제출하기</button>
+          <button id="submit-cancel-btn" class="ghost-btn" type="button">취소</button>
+        </div>
+      </div>
+    </div>
 
     <script src="./libs/opensheetmusicdisplay.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
-    <script defer src="./script.js?v=20260219a19"></script>
+    <script defer src="./script.js?v=20260220a44"></script>
   </body>
 </html>
