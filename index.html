@@ -4,44 +4,53 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PIUM 부분창작 모듈 MVP</title>
-    <link rel="stylesheet" href="./style.css?v=20260220a43" />
+    <link rel="stylesheet" href="./style.css?v=20260227a07" />
   </head>
   <body>
     <main class="app">
       <section id="home-screen" class="home-screen">
         <header class="home-header">
-          <h1>나만의 악보 만들기</h1>
-          <button id="go-teacher-btn" class="action-btn" type="button">교사용</button>
+          <img src="./assets/home/akbo-kkumigi2.png?v=20260223a03" alt="나만의 악보 꾸미기" class="home-title-image" />
+          <button id="go-teacher-btn" class="action-btn teacher-home-btn" type="button" aria-label="교사용" title="교사용">교사용</button>
         </header>
 
         <div class="home-map" aria-label="학년 단계 선택 지도">
-          <svg class="trail-svg" viewBox="0 0 1000 680" preserveAspectRatio="none" aria-hidden="true">
-            <path class="trail-outline" d="M190,70 C460,120 640,40 850,120 C940,155 950,240 840,280 C690,335 450,260 230,330 C85,375 65,500 220,545 C420,605 720,520 900,565" />
-            <path class="trail-fill" d="M190,70 C460,120 640,40 850,120 C940,155 950,240 840,280 C690,335 450,260 230,330 C85,375 65,500 220,545 C420,605 720,520 900,565" />
-          </svg>
-          <div id="home-decor-layer" class="home-decor-layer" aria-hidden="true"></div>
+          <div class="home-map-content">
+            <svg class="trail-svg" viewBox="0 0 1000 680" preserveAspectRatio="none" aria-hidden="true">
+              <path class="trail-outline" d="M190,70 C460,120 640,40 850,120 C940,155 950,240 840,280 C690,335 450,260 230,330 C85,375 65,500 220,545 C420,605 720,520 900,565" />
+              <path class="trail-fill" d="M190,70 C460,120 640,40 850,120 C940,155 950,240 840,280 C690,335 450,260 230,330 C85,375 65,500 220,545 C420,605 720,520 900,565" />
+            </svg>
+            <div id="home-decor-layer" class="home-decor-layer" aria-hidden="true"></div>
 
-          <button type="button" class="stage-btn stage-3" data-grade="3">
-            <span class="stage-title">3학년</span>
-          </button>
-          <button type="button" class="stage-btn stage-4" data-grade="4">
-            <span class="stage-title">4학년</span>
-          </button>
-          <button type="button" class="stage-btn stage-5" data-grade="5">
-            <span class="stage-title">5학년</span>
-          </button>
-          <button type="button" class="stage-btn stage-6" data-grade="6">
-            <span class="stage-title">6학년</span>
-          </button>
+            <button type="button" class="stage-btn stage-3" data-grade="3">
+              <span class="stage-title">3학년</span>
+            </button>
+            <button type="button" class="stage-btn stage-4" data-grade="4">
+              <span class="stage-title">4학년</span>
+            </button>
+            <button type="button" class="stage-btn stage-5" data-grade="5">
+              <span class="stage-title">5학년</span>
+            </button>
+            <button type="button" class="stage-btn stage-6" data-grade="6">
+              <span class="stage-title">6학년</span>
+            </button>
+          </div>
         </div>
       </section>
 
       <section id="teacher-screen" class="teacher-screen is-hidden">
         <header class="teacher-header">
-          <h1>교사용 제출 악보 보기</h1>
+          <h1>교사용 화면</h1>
           <div class="teacher-header-actions">
+            <div class="select-wrap teacher-mode-wrap">
+              <select id="teacher-mode-select" aria-label="교사용 화면 모드">
+                <option value="preview">원곡 들어보기</option>
+                <option value="submission">제출 작품 감상</option>
+              </select>
+            </div>
             <div class="teacher-playback-controls">
-              <div class="select-wrap">
+              <button id="teacher-fullscreen-btn" class="action-btn" type="button">악보 전체보기</button>
+              <div class="select-wrap teacher-select-wrap">
                 <select id="teacher-instrument-select"></select>
               </div>
               <div class="teacher-tempo-wrap">
@@ -49,25 +58,53 @@
                 <span id="teacher-tempo-value">90 BPM</span>
               </div>
               <button id="teacher-play-btn" class="icon-circle-btn" type="button" aria-label="재생" title="재생">▶</button>
+              <button id="teacher-pause-btn" class="icon-circle-btn" type="button" aria-label="일시정지" title="일시정지">❚❚</button>
               <button id="teacher-stop-btn" class="icon-circle-btn" type="button" aria-label="정지" title="정지">■</button>
+              <button id="teacher-full-play-btn" class="action-btn" type="button">전체 재생</button>
+              <button id="teacher-clear-measure-btn" class="action-btn" type="button">마디 전체 해제</button>
+              <button id="teacher-back-btn" class="action-btn home-icon-btn" type="button" aria-label="홈으로" title="홈으로">
+                <svg class="home-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 11.2 L12 3.6 L21 11.2" />
+                  <path d="M6.3 10.6 V20 H10.6 V15 H13.4 V20 H17.7 V10.6" />
+                </svg>
+              </button>
             </div>
-            <button id="teacher-back-btn" class="action-btn" type="button">홈으로</button>
           </div>
         </header>
         <section class="teacher-workspace">
           <article class="teacher-list-pane">
             <div class="teacher-list-head">
-              <h2>제출 목록</h2>
-              <button id="teacher-list-toggle-btn" class="action-btn" type="button">접기</button>
+              <h2 id="teacher-list-title">제출 목록</h2>
+              <div class="teacher-list-tools">
+                <label class="teacher-select-all-wrap">
+                  <input id="teacher-select-all-checkbox" type="checkbox" />
+                  <span>전체</span>
+                </label>
+                <div class="select-wrap teacher-sort-wrap">
+                  <select id="teacher-sort-select" aria-label="제출목록 정렬">
+                    <option value="latest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                    <option value="grade">학년순</option>
+                    <option value="name">이름순</option>
+                  </select>
+                </div>
+                <button id="teacher-delete-selected-btn" class="action-btn" type="button">선택 삭제</button>
+              </div>
+              <button id="teacher-list-toggle-btn" class="icon-circle-btn teacher-list-toggle" type="button" aria-label="제출목록 접기" title="제출목록 접기">◂</button>
             </div>
             <div id="teacher-submission-list" class="teacher-submission-list"></div>
           </article>
           <article class="teacher-preview-pane">
+            <div id="teacher-preview-song-tools" class="teacher-preview-song-tools is-hidden">
+              <div class="select-wrap teacher-preview-grade-wrap">
+                <select id="teacher-preview-grade-select" aria-label="미리듣기 학년 선택"></select>
+              </div>
+              <div class="select-wrap teacher-preview-song-wrap">
+                <select id="teacher-preview-song-select" aria-label="미리듣기 악보 선택"></select>
+              </div>
+            </div>
             <h2>악보 보기</h2>
             <p id="teacher-submission-meta" class="teacher-submission-meta">제출 악보를 선택하세요.</p>
-            <div class="teacher-preview-top-actions">
-              <button id="teacher-fullscreen-btn" class="action-btn" type="button">악보 전체보기</button>
-            </div>
             <div id="teacher-score-container" class="teacher-score-container"></div>
           </article>
         </section>
@@ -83,23 +120,6 @@
       </div>
 
       <section id="editor-screen" class="editor-screen is-hidden">
-        <header class="topbar">
-          <div class="topbar-title-card">
-            <h1>나만의 악보 만들기</h1>
-          </div>
-          <div class="topbar-controls-card">
-            <div class="row topbar-controls">
-              <div class="topbar-song-select">
-                <span id="current-grade-label" class="label">3학년</span>
-                <div class="select-wrap song-select-wrap">
-                  <select id="song-select"></select>
-                </div>
-              </div>
-              <button id="go-home-btn" class="action-btn" type="button">학년 선택</button>
-            </div>
-          </div>
-        </header>
-
         <section class="workspace">
           <article class="score-pane">
             <div class="score-header">
@@ -122,10 +142,31 @@
                 <div id="lyric-keyboard" class="lyric-keyboard"></div>
               </div>
             </div>
+            <input id="lyric-input-capture" class="lyric-input-capture" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
           </article>
 
           <aside class="palette-pane">
-            <h2>음악 꾸미기 🎨</h2>
+            <h2>악보 꾸미기 🎨</h2>
+            <div class="topbar-controls-card palette-top-controls">
+              <div class="row topbar-controls">
+                <div class="topbar-song-select song-card grade-card">
+                  <span class="label">학년</span>
+                  <span id="current-grade-label" class="grade-text">3학년</span>
+                </div>
+                <div class="topbar-song-select song-card title-card">
+                  <span class="label">제목</span>
+                  <div class="select-wrap song-select-wrap">
+                    <select id="song-select"></select>
+                  </div>
+                </div>
+                <button id="go-home-btn" class="action-btn home-icon-btn" type="button" aria-label="홈으로" title="홈으로">
+                  <svg class="home-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 11.2 L12 3.6 L21 11.2" />
+                    <path d="M6.3 10.6 V20 H10.6 V15 H13.4 V20 H17.7 V10.6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
             <section class="tool-group">
               <h3>음정/리듬 바꾸기</h3>
@@ -135,6 +176,10 @@
                   <div class="row icon-row">
                     <button id="pitch-up-btn" class="icon-circle-btn" type="button" aria-label="올리기" title="올리기">↑</button>
                     <button id="pitch-down-btn" class="icon-circle-btn" type="button" aria-label="내리기" title="내리기">↓</button>
+                  </div>
+                  <div class="row icon-row">
+                    <button id="pitch-prev-btn" class="icon-circle-btn" type="button" aria-label="이전 음표" title="이전 음표">←</button>
+                    <button id="pitch-next-btn" class="icon-circle-btn" type="button" aria-label="다음 음표" title="다음 음표">→</button>
                   </div>
                 </div>
                 <div class="mini-tool">
@@ -165,15 +210,6 @@
             </section>
 
             <section class="tool-group">
-              <h3>되돌리기</h3>
-              <div class="row">
-                <button id="undo-btn" class="action-btn" type="button">뒤로가기</button>
-                <button id="redo-btn" class="action-btn" type="button">앞으로 가기</button>
-                <button id="reset-btn" class="action-btn" type="button">처음으로</button>
-              </div>
-            </section>
-
-            <section class="tool-group">
               <h3>들어보기</h3>
               <div class="row instrument-row">
                 <div class="select-wrap">
@@ -184,8 +220,16 @@
                 <button id="play-btn" class="icon-circle-btn" type="button" aria-label="재생" title="재생">▶</button>
                 <button id="pause-btn" class="icon-circle-btn" type="button" aria-label="일시정지" title="일시정지">❚❚</button>
                 <button id="stop-btn" class="icon-circle-btn" type="button" aria-label="정지" title="정지">■</button>
+                <button id="full-play-btn" class="action-btn" type="button">전체 재생</button>
               </div>
-              <div class="row wrap playback-row">
+            </section>
+
+            <section class="tool-group">
+              <h3>상태</h3>
+              <div class="row">
+                <button id="undo-btn" class="action-btn" type="button">뒤로가기</button>
+                <button id="redo-btn" class="action-btn" type="button">앞으로 가기</button>
+                <button id="reset-btn" class="action-btn" type="button">처음으로</button>
                 <button id="save-btn" class="action-btn" type="button">제출하기</button>
               </div>
             </section>
@@ -219,6 +263,6 @@
     <script src="./libs/opensheetmusicdisplay.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
-    <script defer src="./script.js?v=20260220a44"></script>
+    <script defer src="./script.js?v=20260227a24"></script>
   </body>
 </html>

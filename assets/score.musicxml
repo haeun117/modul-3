@@ -9,7 +9,7 @@
     <creator type="lyricist">김규환</creator>
     <encoding>
       <software>MuseScore Studio 4.6.5</software>
-      <encoding-date>2026-02-12</encoding-date>
+      <encoding-date>2026-02-20</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -24,23 +24,23 @@
     </identification>
   <defaults>
     <scaling>
-      <millimeters>6.99911</millimeters>
+      <millimeters>6.99912</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1696.94</page-height>
+      <page-height>1696.93</page-height>
       <page-width>1200.48</page-width>
       <page-margins type="even">
-        <left-margin>85.7252</left-margin>
-        <right-margin>85.7252</right-margin>
-        <top-margin>85.7252</top-margin>
-        <bottom-margin>85.7252</bottom-margin>
+        <left-margin>85.725</left-margin>
+        <right-margin>85.725</right-margin>
+        <top-margin>85.725</top-margin>
+        <bottom-margin>85.725</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>85.7252</left-margin>
-        <right-margin>85.7252</right-margin>
-        <top-margin>85.7252</top-margin>
-        <bottom-margin>85.7252</bottom-margin>
+        <left-margin>85.725</left-margin>
+        <right-margin>85.725</right-margin>
+        <top-margin>85.725</top-margin>
+        <bottom-margin>85.725</bottom-margin>
         </page-margins>
       </page-layout>
     <appearance>
@@ -73,11 +73,13 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600.241935" default-y="1611.210312" justify="center" valign="top" font-size="22">가을바람</credit-words>
+    <credit-words default-x="600.241173" default-y="1611.208292" justify="center" valign="top" font-size="22">가을바람</credit-words>
     </credit>
   <credit page="1">
     <credit-type>composer</credit-type>
-    <credit-words default-x="1114.7587" default-y="1511.210312" justify="right" valign="bottom">김규환 작사 작곡</credit-words>
+    <credit-words default-x="1114.75731" default-y="1511.208419" justify="right" valign="bottom">김규환 작사
+</credit-words>
+    <credit-words>김규환 작곡</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -151,7 +153,7 @@
           <text>랑</text>
           </lyric>
         </note>
-      <note default-x="155.73" default-y="-30">
+      <note default-x="155.72" default-y="-30">
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -652,7 +654,7 @@
           <text>뱅</text>
           </lyric>
         </note>
-      <note default-x="47.53" default-y="-45">
+      <note default-x="47.52" default-y="-45">
         <pitch>
           <step>D</step>
           <octave>4</octave>
